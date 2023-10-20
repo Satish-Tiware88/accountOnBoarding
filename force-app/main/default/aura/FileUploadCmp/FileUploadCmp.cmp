@@ -1,0 +1,154 @@
+<aura:component controller="SurveyFileUploadController" implements="force:appHostable,lightning:availableForFlowScreens,force:lightningQuickAction,lightning:actionOverride,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes" access="global" >
+    <!-- attribute Declaration --> 
+    <aura:attribute name="defaultValue" type="String" />
+    <aura:attribute name="Survey_RecordId" type="String" access= "global"/>
+    <aura:attribute name="Store_Survey_RecordId" type="String" access= "global"/>
+    <aura:attribute name="Distributer_Document_RecordId" type="String"/>
+    <aura:attribute name="AccountId" type="String"/>
+    <aura:attribute name="DistributorDocumentError" type="String"/>
+    
+    <aura:attribute name="Uploaded_DocumentList" type="DistributorDocument__c[]"/>
+    <aura:attribute name="DeleteUploaded_DocumentList" type="DistributorDocument__c[]"/>
+    
+    <aura:attribute name="DistributorDocument" type="Object"/>
+    <aura:attribute name="DistributorDocumentFields" type="Object"/>
+    <aura:attribute name="objInfo" type="account" default="{sobjectType : 'DistributorDocument__c'}" />
+    
+    <aura:attribute name="Spinner" type="Boolean" />
+    <aura:attribute name="canPause" type="Boolean" />
+    <aura:attribute name="canBack" type="Boolean" />
+    <aura:attribute name="canNext" type="Boolean" />
+    <aura:attribute name="canFinish" type="Boolean" />
+    <aura:attribute name="callFromVf" type="Boolean" default="false"/>
+    <force:recordData aura:id="DistributorDocumentRecordCreator" 
+                      layoutType="FULL"
+                      targetRecord="{!v.DistributorDocument}"
+                      targetFields="{!v.DistributorDocumentFields}"
+                      targetError="{!v.DistributorDocumentError}" /> 
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <!-- attribute Declaration -->    
+    
+    <!--<div>
+ <lightning:recordEditForm aura:id="DistributerDocumentRecord"
+                                      recordTypeId="0120k000000L5KLAA0"
+                                      objectApiName="DistributorDocument__c">
+                <lightning:inputField aura:id="documentType" fieldName="Documents_Type__c" onchange="{!c.checkDuplicateDocType}" value="" />
+                
+ </lightning:recordEditForm>    
+</div>    -->
+    <aura:html tag="style">
+        .slds-modal__container {
+        width : 80% !important;
+        max-width : 80% !important;
+        }
+    </aura:html>
+    <div class="slds-form-element">
+        <label class="slds-form-element__label" for="select-01">Select Document</label>
+        <div class="slds-select_container">
+            <ui:inputSelect  aura:id="documentType" class="slds-select"  change="{!c.checkDuplicateDocType}"/>
+        </div>
+    </div>
+    <div>
+        <aura:if isTrue="{!v.Spinner}">
+            <div aura:id="spinnerId" class="slds-spinner_container">
+               <div class="slds-spinner--brand  slds-spinner slds-spinner--large slds-is-relative" role="alert">
+                 <span class="slds-assistive-text">Loading</span>
+                 <div class="slds-spinner__dot-a"></div>
+                 <div class="slds-spinner__dot-b"></div>
+               </div>
+            </div>
+         </aura:if>
+        <aura:if isTrue="{!!v.callFromVf}">
+        	<lightning:fileUpload label="Attach File" 
+                              name="fileUploader"
+                              multiple="false" 
+                              accept=".pdf, .png, .jpeg, .jpg"
+                              recordId="{!v.Survey_RecordId}" 
+                              onuploadfinished="{!c.handleUploadFinished}" />
+        </aura:if>
+		<aura:if isTrue="{!v.callFromVf}">
+        	<lightning:input aura:id="fileId" onchange="{!c.handleFilesChange}" type="file" name="file" label="Upload Attachment" multiple="false"/>
+        </aura:if>        
+    </div>	
+    
+    <div style="margin-top:5%;font-size: 150%; background-color: #D3D3D3;">
+        <h1 style="margin-left:1%;"><b>Uploaded Documents</b></h1>    
+    </div>   
+    <div style="margin-top:5%" class="slds-scrollable--x">
+        <!-- <ui:scrollerWrapper class="sWrapTest">-->
+        <table  class="slds-table slds-table_cell-buffer slds-table_bordered">
+            <thead>
+                <tr class="slds-line-height_reset">
+                    <th class="" scope="col">
+                        <div class="slds-truncate" title="Opportunity Name">SR No.</div>
+                    </th>
+                    <th class="" scope="col">
+                        <div class="slds-truncate" title="Account Name">Document Name</div>
+                    </th>
+                    <th class="" scope="col">
+                        <div class="slds-truncate" title="Close Date">Document Type</div>
+                    </th>
+                    
+                </tr>
+            </thead>
+            
+            <aura:iteration items="{!v.Uploaded_DocumentList}" var="document" indexVar="index">
+                <tbody>
+                    <tr class="slds-hint-parent">
+                        
+                        <td data-label="Account Name">
+                            <div class="slds-truncate" title="Cloudhub">{!index+1}</div>
+                        </td>
+                        <td data-label="Close Date">
+                            <div class="slds-truncate" title="4/14/2015">{!document.Document_Name__c}</div>
+                        </td>
+                        <td data-label="Prospecting">
+                            <div class="slds-truncate" title="Prospecting">{!document.Documents_Type__c}</div>
+                        </td>
+                        <td>
+                            <a onclick="{!c.removeRow}" data-selected-Index="{!index}">
+                                <lightning:icon variant="error" iconName="utility:delete" class="slds-icon slds-icon_small" size="small" alternativeText="icon"/>
+                                <span class="slds-assistive-text">Delete Icon</span>
+                            </a>
+                        </td>
+                    </tr>
+                    
+                </tbody>   
+                
+            </aura:iteration>  
+        </table>
+        <!--  </ui:scrollerWrapper>-->
+    </div>
+    <div aura:id="actionButtonBar" class="slds-clearfix slds-p-top_medium">
+        <!-- If Previous is available, display to the left -->
+        <div class="slds-float_left">
+            <aura:if isTrue="{!v.canBack}">
+                <lightning:button aura:id="BACK" label="Previous"
+                                  variant="neutral" onclick="{!c.onButtonPressed}" />
+            </aura:if>
+        </div>
+        <div class="slds-float_right">
+            <!-- If Pause, Next, or Finish are available, display to the right -->
+            
+            <aura:if isTrue="{!v.callFromVf}">
+                <lightning:button aura:id="NEXT" label="Save" 
+                                  variant="brand" onclick="{!c.onButtonPressed}" />
+            </aura:if>
+            <aura:if isTrue="{!v.canPause}">
+                <lightning:button aura:id="PAUSE" label="Pause"
+                                  variant="neutral" onclick="{!c.onButtonPressed}" />
+            </aura:if>
+            <aura:if isTrue="{!v.canNext}">
+                <lightning:button aura:id="NEXT" label="Next" 
+                                  variant="brand" onclick="{!c.onButtonPressed}" />
+            </aura:if>
+            <aura:if isTrue="{!v.canFinish}">
+                <lightning:button aura:id="FINISH" label="Done"
+                                  variant="brand" onclick="{!c.onButtonPressed}" />
+            </aura:if>
+        </div>
+    </div>   
+    
+    
+</aura:component>

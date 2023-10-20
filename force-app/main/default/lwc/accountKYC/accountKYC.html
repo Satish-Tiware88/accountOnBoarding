@@ -1,0 +1,11 @@
+<template>
+    <!-- Invoke a Screen flow in LWC -->
+    <div class="slds-modal__container">
+        <p>Record Id:-{recordId}</p>
+    <template if:true={recordId}>
+    <lightning-flow
+        flow-api-name='Account_On_Boarding_Flow'>
+    </lightning-flow>
+</template>
+    </div>
+</template>

@@ -1,0 +1,5 @@
+<design:component>
+    <design:attribute name="Distributer_Document_RecordId" label="Distributer_Document_RecordId" />
+    <design:attribute name="Survey_RecordId" label="Survey_RecordId" />
+    <design:attribute name="AccountId" label="AccountId" />
+</design:component>

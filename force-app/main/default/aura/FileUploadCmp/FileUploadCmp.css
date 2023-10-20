@@ -1,0 +1,11 @@
+.THIS {
+}
+
+.THIS.table {
+  border-collapse: collapse;
+}
+
+.THIS .sWrapTest {
+    height:100%;
+    width:100%;
+}
