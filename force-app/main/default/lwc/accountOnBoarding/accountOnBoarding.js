@@ -70,6 +70,7 @@ export default class AccountOnBoarding extends NavigationMixin(LightningElement)
    @api availableActions = [];
    missingDoc=[];
    @track isMissing;
+   @track isDuplicate;
 
    @wire(mandatoryFiles) 
    mandatoryFiles(data, error){
@@ -153,6 +154,19 @@ export default class AccountOnBoarding extends NavigationMixin(LightningElement)
     }
     
    }
+
+   checkDuplicate() {
+
+    const data = this.loadData.includes(this.docType);
+    if(data){
+        return true;
+    }else{
+        return false;
+    }
+    
+     }
+
+    
 
     OnDocTypeChange(event){
         console.log('In DocType Change');
@@ -343,7 +357,9 @@ export default class AccountOnBoarding extends NavigationMixin(LightningElement)
       }
       filecmp.reportValidity();
 
-      if(pickvalue && descvalue && fileValue){
+      
+
+  if(pickvalue && descvalue && fileValue){
         this.saveRecord();
       }
        
@@ -467,5 +483,4 @@ previewFile(file){
     }
 
 
- }  
-
+ }

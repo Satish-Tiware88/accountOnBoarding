@@ -1,7 +1,6 @@
-
 <template>
 
-    <div class="spinner"> 
+    <div class="spinner">
         <template if:true={isLoading}>
              <lightning-spinner alternative-text="Loading" variant="brand" size="large">
              </lightning-spinner>
@@ -47,17 +46,15 @@
                     <li key={element}><b>{element}.</b></li>
                 </template>
                 </ol>
-            </template> 
+            </template>
         </div>
-
+       <br/><br/>
         
-        <br/><br/>
-        
-        <div style="height:250px !important" > 
+        <!-- <div style="height:250px !important" >  -->
             <lightning-datatable key-field="Id" data={loadData} columns={columns} hide-checkbox-column="true"
-             class="slds-max-medium-table_stacked-horizontal slds-table slds-table_cell-buffer slds-table_bordered" show-row-number-column="true" onrowaction={callRowAction}>
+             class="slds-table slds-table_cell-buffer slds-table_bordered" show-row-number-column="true" onrowaction={callRowAction}>
             </lightning-datatable> 
-        </div> 
+        <!-- </div>  -->
      
 
         <footer class="slds-modal__footer">

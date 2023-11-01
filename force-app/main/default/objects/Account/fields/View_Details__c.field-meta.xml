@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>View_Details__c</fullName>
+    <externalId>false</externalId>
+    <formula>HYPERLINK(&quot;/apex/AccountDetails?id=&quot;+ Id, &quot;View More&quot;,&apos;_target&apos;)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>View Details</label>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
