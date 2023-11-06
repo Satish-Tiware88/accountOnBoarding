@@ -1,9 +1,9 @@
 import { LightningElement , track, wire, api} from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
-import createRecWithFile from '@salesforce/apex/DistributorOnboardingController.createRecWithFile';
-import getContentDetails from '@salesforce/apex/DistributorOnboardingController.getContentDetails';
-import mandatoryFiles from '@salesforce/apex/DistributorOnboardingController.mandatoryFiles';
-import getRecords from '@salesforce/apex/DistributorOnboardingController.getRecords';
+import createRecWithFile from '@salesforce/apex/ICustomerOnboardingService.createRecWithFile';
+import getContentDetails from '@salesforce/apex/ICustomerOnboardingService.getContentDetails';
+import mandatoryFiles from '@salesforce/apex/ICustomerOnboardingService.mandatoryFiles';
+import getRecords from '@salesforce/apex/ICustomerOnboardingService.getRecords';
 import { getPicklistValues} from 'lightning/uiObjectInfoApi';
 import { getObjectInfo } from 'lightning/uiObjectInfoApi';
 import Distributor_Doc from '@salesforce/schema/Distributor_Document__c';
@@ -65,12 +65,12 @@ export default class AccountOnBoarding extends NavigationMixin(LightningElement)
    @track loadData;
    @track contentDoc;
    @track isLoading = false;
-   @track selectedValue = '';
+   @track selectedValue;
    filesList =[];
    @api availableActions = [];
    missingDoc=[];
    @track isMissing;
-   @track isDuplicate;
+   @track idDuplicate;
 
    @wire(mandatoryFiles) 
    mandatoryFiles(data, error){
@@ -127,6 +127,7 @@ export default class AccountOnBoarding extends NavigationMixin(LightningElement)
    validateDocument(){
     let docType =[];
     console.log('Documnet Type',this.DocumentType);
+    console.log('Table Data',this.loadData);
     
     this.loadData.forEach(element => {
         docType.push(element.Name);
@@ -155,20 +156,14 @@ export default class AccountOnBoarding extends NavigationMixin(LightningElement)
     
    }
 
-   checkDuplicate() {
+   checkDuplicate(){
 
-    const data = this.loadData.includes(this.docType);
-    if(data){
-        return true;
-    }else{
-        return false;
-    }
-    
-     }
+    const filteredData = this.loadData.filter(item => item.Name === this.DocType);
+    return filteredData.length > 0;
 
-    
+   }
 
-    OnDocTypeChange(event){
+ OnDocTypeChange(event){
         console.log('In DocType Change');
          this.DocType = event.target.value;
          this.isMissing = false;
@@ -197,7 +192,7 @@ export default class AccountOnBoarding extends NavigationMixin(LightningElement)
         {
            
             this.loadData = JSON.parse(JSON.stringify(result));
-            console.log('@@Document Data',JSON.stringify(result));
+            console.log('##Document Data==>',JSON.stringify(this.loadData));
             
             
             
@@ -276,54 +271,76 @@ export default class AccountOnBoarding extends NavigationMixin(LightningElement)
             
         }
     }
-
+    
     saveRecord(){
 
-        let formData={
-            recName: this.DocType,
-            recId: this.recordId,
-            recDescription: this.Desc,
-            base64Data: this.fileData.base64,
-            fileName: this.fileData.fileName
+        if(!this.checkDuplicate()){
+            
+            console.log('Duplicate',this.checkDuplicate());
+            this.isLoading = true;
+            let formData={
+                recName: this.DocType,
+                recId: this.recordId,
+                recDescription: this.Desc,
+                base64Data: this.fileData.base64,
+                fileName: this.fileData.fileName
+            }
+    
+            let formFile = JSON.stringify(formData);
+    
+            console.log('Form Data-->',formFile);
+    
+            createRecWithFile({
+                formFile: formFile,
+                
+            })
+                .then(result => {
+                    // Handle success, e.g., show a success message or navigate to the created record
+                 //    this.recId = result;
+                    console.log('In Record Id',this.recordId);
+                    
+                    this.isLoading = true;
+         
+                    getRecords({accountId: this.recordId})
+                    .then(data =>{
+                              this.loadData = data;
+                              console.log('##Load Data',this.loadData);
+         
+                       })
+         
+                       this.isLoading = false;
+                       this.selectedValue = '';
+                       this.Desc = '';
+                       this.fileName = null;
+                       console.log('After Click',this.DocType,this.Desc,this.fileData);
+                })
+                .catch(error => {
+                    console.log('In Error',error);
+                    this.isLoading = false;
+                });
+
+        }else{
+
+            this.dispatchEvent(
+               new ShowToastEvent({
+                   title: 'Error',
+                   message: "Document already exist!",
+                   variant: 'error'
+                 })
+            );
+            this.isLoading = false;
         }
 
-        let formFile = JSON.stringify(formData);
+ 
+    } 
 
-        console.log('Form Data-->',formFile);
+    
 
-        createRecWithFile({
-            formFile: formFile,
-            
-        })
-            .then(result => {
-                // Handle success, e.g., show a success message or navigate to the created record
-             //    this.recId = result;
-                console.log('In Record Id',this.recordId);
-                
-                this.isLoading = false;
-     
-                getRecords({accountId: this.recordId})
-                .then(data =>{
-                          this.loadData = data;
-                          console.log('##Load Data',this.loadData);
-     
-                   })
-     
-                   this.isLoading = false;
-                   this.selectedValue = '';
-                   this.Desc = '';
-                   this.fileName = null;
-                   console.log('After Click',this.DocType,this.Desc,this.fileData);
-            })
-            .catch(error => {
-                console.log('In Error',error);
-                this.isLoading = false;
-            });
-
-    }
+   
 
     handleSave(event){
         console.log('In Button',this.DocType,this.Desc,this.fileData);
+
 
          let pickcmp = this.template.querySelector(".combocmp");
          let desccmp = this.template.querySelector(".desccmp");
@@ -359,7 +376,7 @@ export default class AccountOnBoarding extends NavigationMixin(LightningElement)
 
       
 
-  if(pickvalue && descvalue && fileValue){
+      if(pickvalue && descvalue && fileValue){
         this.saveRecord();
       }
        
@@ -410,7 +427,7 @@ getBaseUrl(){
 
 previewFile(file){
     console.log('In Preview',file);
-
+    file = file[0];
     try {
         this[NavigationMixin.Navigate]({
             type: 'standard__namedPage',
@@ -431,7 +448,7 @@ previewFile(file){
 
     downloadFile(file){
         console.log('In Download');
-
+        file = file[0];
       let baseUrl = this.getBaseUrl();
       let downloadURL = baseUrl+'sfc/servlet.shepherd/document/download/'+file.ContentDocumentId;
      

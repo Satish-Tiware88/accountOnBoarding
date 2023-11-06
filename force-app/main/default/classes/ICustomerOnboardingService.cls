@@ -10,7 +10,7 @@ public class ICustomerOnboardingService implements ICustomerOnboardingApplicatio
 
     Savepoint sp = Database.setSavepoint();
 
-    try {
+    // try {
         
         LibISObjectUnitOfWork uow=CustomerOnBoardingApplication.unitOfWork.newInstance();
 
@@ -26,6 +26,7 @@ public class ICustomerOnboardingService implements ICustomerOnboardingApplicatio
        // insert distributorDoc;
         uow.registerNew(distributorDoc);
         uow.commitWork();
+        uow=CustomerOnBoardingApplication.unitOfWork.newInstance();
     
         ContentVersion.sObjectType.getDescribe().isCreateable();
         ContentVersion contentVersionRec = new ContentVersion();  
@@ -36,6 +37,7 @@ public class ICustomerOnboardingService implements ICustomerOnboardingApplicatio
         //Insert contentVersionRec;  
         uow.registerNew(contentVersionRec);
         uow.commitWork();
+        uow=CustomerOnBoardingApplication.unitOfWork.newInstance();
         
         Id conDoc = [SELECT ContentDocumentId FROM ContentVersion WHERE Id =:contentVersionRec.Id].ContentDocumentId;
         
@@ -51,16 +53,14 @@ public class ICustomerOnboardingService implements ICustomerOnboardingApplicatio
 
             return distributorDoc.Id;
         } 
-        catch(DMLException e) {
-            System.debug(e);
-            System.debug('Exception Message in: ' + e.getMessage());
-            System.debug('Exception Message at: ' + e.getLineNumber());
-            Database.rollback(sp);
-            return null;
+        // catch(DMLException e) {
+        //     System.debug(e);
+        //     System.debug('Exception Message in: ' + e.getMessage());
+        //     System.debug('Exception Message at: ' + e.getLineNumber());
+        //     Database.rollback(sp);
+        //     return null;
             
-        }
-        
-    }    
+        // }
 
     
     

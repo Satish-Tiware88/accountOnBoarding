@@ -51,6 +51,7 @@ public ContentVersion selectById(id docId){
         }
    
     System.debug('Query is'+query.toSOQL());
+    System.debug('Query new is'+query.toSOQL());
     return Database.query( query.toSOQL());    
 }
 
